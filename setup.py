@@ -8,6 +8,8 @@ setup(
         "twittermonitor",
     ],
     install_requires=[
+        'tweepy>=4.10.1',
+        'pytimeparse>=1.1.8',
     ],
     author='Guglielmo Cola',
     author_email='guglielmo.cola@iit.cnr.it',
