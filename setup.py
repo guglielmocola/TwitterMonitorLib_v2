@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='twittermonitor',
-    description='Library to exploit Twitter API v2 on JupyterHub.',
+    description='Library to ease the use of Twitter API v2 on JupyterHub',
     version='0.1.0',
     packages=[
         "twittermonitor",
