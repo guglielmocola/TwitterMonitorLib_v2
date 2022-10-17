@@ -27,7 +27,6 @@ class TwitterMonitor:
 
         self._crawlers = {'active': {}, 'paused': {}}  # name: crawler
 
-        self._credentials_info = {}
         self._credentials = {}  # saved as user/app_name: bearer_token
 
         # Try loading credentials.
@@ -173,16 +172,16 @@ class TwitterMonitor:
         Returns:
             dict: level: {'tokens', 'rules_max', 'rules_used'}
         """
-        credentials_info = {}
+        c_info = {}
         for m in self._managers.values():
-            if m.level not in credentials_info:
-                credentials_info[m.level] = {
+            if m.level not in c_info:
+                c_info[m.level] = {
                     'tokens': 1, 'rules_max': m.max_rules, 'rules_used': len(m.rules)}
             else:
-                credentials_info[m.level]['tokens'] += 1
-                credentials_info[m.level]['rules_max'] += m.max_rules
-                credentials_info[m.level]['rules_used'] += len(m.rules)
-        return credentials_info
+                c_info[m.level]['tokens'] += 1
+                c_info[m.level]['rules_max'] += m.max_rules
+                c_info[m.level]['rules_used'] += len(m.rules)
+        return c_info
 
     def _check_crawler_name(self, name):
         # global _tm_config
@@ -448,7 +447,7 @@ class TwitterMonitor:
 
             print('*** CRDENTIALS ***')
             # Find info on available "levels" and "rules"
-            credentials_info = self._credentials_info()
+            c_info = self._credentials_info()
 
             print(
                 f'{"Type":<10}'
@@ -457,10 +456,10 @@ class TwitterMonitor:
             )
 
             for level in tmu.tm_config['api_limits']:
-                if level in credentials_info:
-                    tokens = credentials_info[level]['tokens']
-                    rules_max = credentials_info[level]['rules_max']
-                    rules_used = credentials_info[level]['rules_used']
+                if level in c_info:
+                    tokens = c_info[level]['tokens']
+                    rules_max = c_info[level]['rules_max']
+                    rules_used = c_info[level]['rules_used']
                     print(
                         f'{level:<10}'
                         f'{tokens:<10}'
