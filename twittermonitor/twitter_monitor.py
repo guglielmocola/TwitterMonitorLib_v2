@@ -413,14 +413,14 @@ class TwitterMonitor:
             if len(self._crawlers['active']):
                 print('*** ACTIVE CRAWLERS ***')
                 print(
-                    f'{"name":<{name_spaces}}'
+                    f'{"Name":<{name_spaces}}'
                     #                      f'{"type (targets)":<15}'
-                    f'{"type":<8}'
-                    f'{"targets":<9}'
+                    f'{"Type":<8}'
+                    f'{"Targets":<9}'
                     #                      f'{"type":<8}'                    
-                    f'{"started (UTC)":<16}'
-                    f'{"tot active":<12}'
-                    f'{"tweets"}'
+                    f'{"Started (UTC)":<16}'
+                    f'{"Tot active":<12}'
+                    f'{"Tweets"}'
                     #                      f'{"targets"}'
                 )
                 for c in self._crawlers['active'].values():
@@ -430,14 +430,14 @@ class TwitterMonitor:
             if len(self._crawlers['paused']):
                 print('*** PAUSED CRAWLERS ***')
                 print(
-                    f'{"name":<{name_spaces}}'
-                    f'{"type":<8}'
-                    f'{"targets":<9}'
+                    f'{"Name":<{name_spaces}}'
+                    f'{"Type":<8}'
+                    f'{"Targets":<9}'
                     #                      f'{"type (targets)":<15}'
                     #                      f'{"type":<8}'
-                    f'{"paused (UTC)":<16}'
-                    f'{"tot active":<12}'
-                    f'{"tweets"}'
+                    f'{"Paused (UTC)":<16}'
+                    f'{"Tot active":<12}'
+                    f'{"Tweets"}'
                     #                      f'{"targets"}'
                 )
                 for c in self._crawlers['paused'].values():
