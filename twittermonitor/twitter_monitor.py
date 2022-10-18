@@ -12,7 +12,7 @@ _tm_instance_active = False
 
 class TwitterMonitor:
     def __init__(self, verbose=True):
-        global _tm_instance_active  #, _tm_config
+        global _tm_instance_active
 
         self._lock = threading.Lock()
 
@@ -34,19 +34,19 @@ class TwitterMonitor:
         try:
             self._load_credentials(c_file_path)  # fill self.credentials
         except Exception as error:
-            print(f'Error: unable to load credentials from file "{c_file_path}" -- {repr(error)}')
+            tmu.tm_log.error(f'Error: unable to load credentials from file "{c_file_path}" -- {repr(error)}')
             raise error
 
         n_credentials = len(self._credentials)
         if n_credentials == 0:
-            print(f'Error: no credentials found in file "{c_file_path}"')
+            tmu.tm_log.error(f'Error: no credentials found in file "{c_file_path}"')
             raise (Exception(f'Error: no credentials found in file "{c_file_path}"'))
 
         if self._verbose:
             plural = ''
             if n_credentials > 1:
                 plural = 's'
-            print(f'{n_credentials} credential{plural} loaded from file "{c_file_path}"')
+            tmu.tm_log.info(f'{n_credentials} credential{plural} loaded from file "{c_file_path}"')
 
         # Load or create dataset folder.
         data_dir = tmu.tm_config['data_path']
@@ -54,39 +54,36 @@ class TwitterMonitor:
             try:
                 os.mkdir(data_dir)
             except Exception as error:
-                print(f'Error: unable to create dataset path "{data_dir}"')
-                raise (error)
+                tmu.tm_log.error(f'Error: unable to create dataset path "{data_dir}"')
+                raise error
         else:
             # dataset folder already exists, check for content and load it
             list_dir = [dI for dI in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, dI))]
-            # print(list_dir)
             crawlers = []
             for d in list_dir:
-                #                 print(f'Existing crawler {d} found -- attempting to load...')
-                #                 print(d)
                 try:
                     crawler = Crawler(d)
                 except Exception as error:
-                    print(f'Unable to load crawler {d} -- {error}')
+                    tmu.tm_log.error(f'Unable to load crawler {d} -- {error}')
                 else:
                     if crawler.deleted:
-                        print(f'Ignored crawler {d} as it was deleted by user')
+                        tmu.tm_log.error(f'Ignored crawler {d} as it was deleted by user')
                     else:
                         self._crawlers['paused'][d] = crawler
-                        print(f'Existing Crawler {d} loaded successfully (paused)')
+                        tmu.tm_log.error(f'Existing Crawler {d} loaded successfully (paused)')
 
         # Create a TokenManager for each credential
         for cn in self._credentials:
             if self._verbose:
-                print(f'Creating TokenManager for credential {cn}...')
+                tmu.tm_log.info(f'Creating TokenManager for credential {cn}...')
             try:
                 self._managers[cn] = TokenManager(cn, self._credentials[cn])
             except Exception as error:
-                print(f'Error: unable to create TokenManager for credential "{cn}" -- {repr(error)}')
+                tmu.tm_log.error(f'Error: unable to create TokenManager for credential "{cn}" -- {repr(error)}')
                 raise error
             else:
                 if self._verbose:
-                    print(f'Success. Credential {cn} has level: {self._managers[cn].level}')
+                    tmu.tm_log.info(f'Success. Credential {cn} has level: {self._managers[cn].level}')
 
         # Fill managers_by_level list.
         for level in tmu.tm_config['api_limits']:
@@ -107,7 +104,7 @@ class TwitterMonitor:
         """
         global _tm_instance_active
         if _tm_instance_active is not False:
-            print('Error: only one TwitterMonitor object can be defined. Returning the already-existing object.')
+            tmu.tm_log.error('Error: only one TwitterMonitor object can be defined. Returning the already-existing object.')
             return _tm_instance_active
         return super(TwitterMonitor, cls).__new__(cls, *args, **kwargs)
 
@@ -115,7 +112,7 @@ class TwitterMonitor:
         # global _tm_config
 
         # Endless loop, check every 'check_interval' seconds.
-        while (True):
+        while True:
             with self._lock:
                 # Loop through all managers
                 for m in self._managers.values():
@@ -127,8 +124,8 @@ class TwitterMonitor:
                         # Check end conditions
                         current_date = tmu.tm_date()
                         if isinstance(c.end_date, datetime.datetime) and c.end_date < current_date:
-                            # XXX TODO
-                            print(f"Crawler time has expired")
+                            # XXX TODO for NEXT version
+                            tmu.tm_log.warning(f"Crawler time has expired")
 
                         start_date = tmu.tm_date_fromstr(c.activity_log[-1]['start'])
                         c.activity_log[-1]['duration'] = str(current_date - start_date).split('.')[0]
@@ -155,7 +152,7 @@ class TwitterMonitor:
                         raise Exception(f"{error_msg} -- Missing field '{f}' in credential on line {line}")
                 c_name = f"{c['user']}/{c['app_name']}"
                 if c_name in self._credentials:
-                    print(f'Warning: repeated credential {c_name} on line {line} -- ignored')
+                    tmu.tm_log.warning(f'Warning: repeated credential {c_name} on line {line} -- ignored')
                     continue
                 self._credentials[c_name] = c['bearer_token']
 
@@ -223,11 +220,13 @@ class TwitterMonitor:
         if rules_used < 0:
             error_msg = 'Error: unable to find a token with enough free rules. You may want to try using multiple crawlers with a subset of the targets'
             if self._verbose:
-                print(error_msg)
+                tmu.tm_log.error(error_msg)
             return False, error_msg
 
+        success_msg = f'OK: crawler {crawler.name} activated to {crawler.mode} the specified targets'
+
         if self._verbose:
-            success_msg = f'OK: crawler {crawler.name} activated to {crawler.mode} the specified targets'
+            tmu.tm_log.info(success_msg)
         return True, success_msg
 
     def track(self, name, keywords):
@@ -251,7 +250,7 @@ class TwitterMonitor:
             status, error = self._check_crawler_name(name)
             if status is False:
                 if self._verbose:
-                    print(error_msg + error)
+                    tmu.tm_log.error(error_msg + error)
                 return False, error_msg + error
 
             # Create crawler
@@ -259,7 +258,7 @@ class TwitterMonitor:
                 crawler = Crawler(name, False, keywords)
             except Exception as error:
                 if self._verbose:
-                    print(error_msg + repr(error))
+                    tmu.tm_log.error(error_msg + repr(error))
                 return False, error_msg + repr(error)
 
             return self._assign_crawler(crawler)
@@ -285,7 +284,7 @@ class TwitterMonitor:
             status, error = self._check_crawler_name(name)
             if status is False:
                 if self._verbose:
-                    print(error_msg + error)
+                    tmu.tm_log.info(error_msg + error)
                 return False, error_msg + error
 
             # Create crawler
@@ -293,7 +292,7 @@ class TwitterMonitor:
                 crawler = Crawler(name, True, accounts)
             except Exception as error:
                 if self._verbose:
-                    print(error_msg + repr(error))
+                    tmu.tm_log.error(error_msg + repr(error))
                 return False, error_msg + repr(error)
 
             return self._assign_crawler(crawler)
@@ -317,7 +316,7 @@ class TwitterMonitor:
                     error_msg = f'Error: crawler "{name}" is already paused'
 
                 if self._verbose:
-                    print(error_msg)
+                    tmu.tm_log.error(error_msg)
                 return False, error_msg
 
             # OK, crawler is really active. Let's pause it
@@ -331,7 +330,7 @@ class TwitterMonitor:
 
             success_msg = f'Crawler "{name}" successfully paused'
             if self._verbose:
-                print(success_msg)
+                tmu.tm_log.info(success_msg)
             return True, success_msg
 
     def resume(self, name):
@@ -353,7 +352,7 @@ class TwitterMonitor:
                     error_msg = f'Error: crawler "{name}" is already active'
 
                 if self._verbose:
-                    print(error_msg)
+                    tmu.tm_log.error(error_msg)
                 return False, error_msg
 
             # Try resuming the crawler
@@ -382,7 +381,7 @@ class TwitterMonitor:
                     error_msg = f'Error: crawler "{name}" is active and cannot be deleted'
 
                 if self._verbose:
-                    print(error_msg)
+                    tmu.tm_log.error(error_msg)
                 return False, error_msg
 
             # OK, let's delete the paused crawler
@@ -392,17 +391,17 @@ class TwitterMonitor:
             error_msg = f'Error: Unable to delete crawler "{name}" -- '
             # Create crawler
             try:
-                crawler.delete(delete_data)
+                crawler.delete()
             except Exception as error:
                 if self._verbose:
-                    print(error_msg + repr(error))
+                    tmu.tm_log.error(error_msg + repr(error))
                 return False, error_msg + repr(error)
 
             del self._crawlers['paused'][name]
 
             success_msg = f'Crawler "{name}" successfully deleted from TwitterMonitor'
             if self._verbose:
-                print(success_msg)
+                tmu.tm_log.info(success_msg)
             return True, success_msg
 
     def info(self):
