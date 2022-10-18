@@ -70,7 +70,7 @@ class TwitterMonitor:
                         tmu.tm_log.error(f'Ignored crawler {d} as it was deleted by user')
                     else:
                         self._crawlers['paused'][d] = crawler
-                        tmu.tm_log.error(f'Existing Crawler {d} loaded successfully (paused)')
+                        tmu.tm_log.info(f'Existing Crawler {d} loaded successfully (paused)')
 
         # Create a TokenManager for each credential
         for cn in self._credentials:

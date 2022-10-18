@@ -42,7 +42,7 @@ tm_log.addHandler(fh)
 
 # STDOUT handler
 lh = logging.StreamHandler(sys.stdout)
-lh.setFormatter(logging.Formatter('%(asctime)s %(levelname)-8s %(message)s', datefmt='%d-%b-%y %H:%M:%S'))
+lh.setFormatter(logging.Formatter('%(levelname)-8s %(message)s', datefmt='%d-%b-%y %H:%M:%S'))
 tm_log.addHandler(lh)
 
 def tm_date():
