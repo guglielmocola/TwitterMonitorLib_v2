@@ -20,9 +20,7 @@ class TokenManager(StreamingClient):
         self.disconnect()
         self.level = self._check_credential()
 
-        self.sessions = []
-        #         print(self.level)
-        #         return
+        # self.sessions = []
 
         self.rules = {}  # rule_id: crawler_name
 
@@ -91,48 +89,49 @@ class TokenManager(StreamingClient):
             self.delete_rules(rids)
 
     def on_response(self, status):
-        #         print('on RESP')
-        #         print(status)
         with self.lock:
             tweet = status.data.data
             date_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-            print(tweet)
-            for r in status.matching_rules:
-                # Only process response if rules still exists (it might have been just removed)
-                if r.id in self.rules:
-                    crawler_name = self.rules[r.id]
-                    crawler = self.crawlers[crawler_name]
 
-                    # Save tweet for crawler.
-                    file_path = crawler.path + f"/{date_str}.jsonl"
+            # tmu.tm_log.info('Tweet received')
 
-                    with open(file_path, "a") as write_file:
-                        json.dump(tweet, write_file)
-                        write_file.write('\n')
+            try:
+                for r in status.matching_rules:
+                    # Only process response if rules still exists (it might have been just removed)
+                    if r.id in self.rules:
+                        crawler_name = self.rules[r.id]
+                        crawler = self.crawlers[crawler_name]
 
-                    crawler.tweets += 1
+                        # Save tweet for crawler.
+                        file_path = crawler.path + f"/{date_str}.jsonl"
+
+                        with open(file_path, "a") as write_file:
+                            json.dump(tweet, write_file)
+                            write_file.write('\n')
+                        crawler.tweets += 1
+            except Exception as error:
+                tmu.tm_log.error(f'Error while processing response -- {error}')
+            else:
+                tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
 
     def on_errors(self, errors):
-        print(f'{self.name} error -- {errors}')
-        return False
-        # if status_code == 420:  # end of monthly limit rate (500k)
-        #     return False
+        tmu.tm_log.error(f'{self.name} error -- {errors}')
 
     def on_connect(self):
-        print(f'{self.name} connected')
-        self.sessions.append(self.session)
+        tmu.tm_log.info(f'{self.name} connected')
+        # self.sessions.append(self.session)
 
     def on_disconnect(self):
-        print(f'{self.name} disconnected')
+        tmu.tm_log.info(f'{self.name} disconnected')
 
     def on_disconnect_message(self, message):
-        print(f'{self.name} disconnected -- {message}')
+        tmu.tm_log.info(f'{self.name} disconnected -- {message}')
 
     def on_closed(self, response):
-        print(f'{self.name} closed -- {response}')
+        tmu.tm_log.info(f'{self.name} closed -- {response}')
 
     def on_connection_error(self):
-        print(f'{self.name} connection error')
+        tmu.tm_log.error(f'{self.name} connection error')
 
     #         self.disconnect()
 
@@ -140,10 +139,10 @@ class TokenManager(StreamingClient):
     #     print(f'{self.name} keep alive')
 
     def on_request_error(self, status_code):
-        print(f'{self.name} request error -- {status_code}')
+        tmu.tm_log.error(f'{self.name} request error -- {status_code}')
 
     def on_exception(self, exception):
-        print(f'{self.name} unhandled exception -- {repr(exception)}')
+        tmu.tm_log.error(f'{self.name} unhandled exception -- {repr(exception)}')
 
     def add_crawler(self, crawler):
         """Add a new crawler to the TokenManager
