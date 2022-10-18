@@ -109,7 +109,7 @@ class TokenManager(StreamingClient):
                             json.dump(tweet, write_file)
                             write_file.write('\n')
                         crawler.tweets += 1
-                        tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
+                        # tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
             except Exception as error:
                 tmu.tm_log.error(f'Error while processing response -- {error}')
 
