@@ -106,6 +106,8 @@ class TwitterMonitor:
     def _check_status(self):
         # global _tm_config
 
+        last_log_time = time.time()
+
         # Endless loop, check every 'check_interval' seconds.
         while True:
             with self._lock:
@@ -113,7 +115,6 @@ class TwitterMonitor:
                 for m in self._managers.values():
                     # Get list of crawlers
                     m_crawlers = list(m.crawlers.values())
-                    # XXX
 
                     for c in m_crawlers:
                         # Check end conditions
@@ -122,9 +123,14 @@ class TwitterMonitor:
                             # XXX TODO for NEXT version
                             tmu.tm_log.warning(f"Crawler time has expired")
 
+                        # Update duration and save crawler
                         start_date = tmu.tm_date_fromstr(c.activity_log[-1]['start'])
                         c.activity_log[-1]['duration'] = str(current_date - start_date).split('.')[0]
                         c.save()
+                        current_time = time.time()
+                        if current_time-last_log_time > tmu.tm_config['log_interval']:
+                            tmu.tm_log.info(f'Active:{c.name} Tweets:{c.tweets}')
+                            last_log_time = current_time
 
             time.sleep(tmu.tm_config['check_interval'])
 

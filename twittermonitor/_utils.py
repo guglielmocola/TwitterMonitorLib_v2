@@ -22,7 +22,8 @@ tm_config = {
     'credentials_file': 'credentials.jsonl',
     'data_path': 'data_TM',
     'crawler_name_max_l': 25,
-    'check_interval': 10,
+    'check_interval': 30,
+    'log_interval': 600,
     'log_file': 'log_tm.txt'
 }
 
