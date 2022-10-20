@@ -116,6 +116,12 @@ class TwitterMonitor:
                     # Get list of crawlers
                     m_crawlers = list(m.crawlers.values())
 
+                    write_log = False
+                    current_time = time.time()
+                    if current_time-last_log_time > tmu.tm_config['log_interval']:
+                        write_log = True
+                        last_log_time = current_time
+
                     for c in m_crawlers:
                         # Check end conditions
                         current_date = tmu.tm_date()
@@ -127,10 +133,9 @@ class TwitterMonitor:
                         start_date = tmu.tm_date_fromstr(c.activity_log[-1]['start'])
                         c.activity_log[-1]['duration'] = str(current_date - start_date).split('.')[0]
                         c.save()
-                        current_time = time.time()
-                        if current_time-last_log_time > tmu.tm_config['log_interval']:
+                        if write_log:
                             tmu.tm_log.info(f'Active:{c.name} Tweets:{c.tweets}')
-                            last_log_time = current_time
+
 
             time.sleep(tmu.tm_config['check_interval'])
 

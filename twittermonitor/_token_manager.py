@@ -90,12 +90,10 @@ class TokenManager(StreamingClient):
 
     def on_response(self, status):
         with self.lock:
-            tweet = status.data.data
-            date_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-
-            # tmu.tm_log.info('Tweet received')
-
             try:
+                tweet = status.data.data
+                date_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+
                 for r in status.matching_rules:
                     # Only process response if rules still exists (it might have been just removed)
                     if r.id in self.rules:
@@ -111,7 +109,7 @@ class TokenManager(StreamingClient):
                         crawler.tweets += 1
                         # tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
             except Exception as error:
-                tmu.tm_log.error(f'Error while processing response -- {error}')
+                tmu.tm_log.error(f'Error while processing response -- {status} -- {error}')
 
     def on_errors(self, errors):
         tmu.tm_log.error(f'{self.name} error -- {errors}')
