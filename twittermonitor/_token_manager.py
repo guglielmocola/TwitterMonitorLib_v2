@@ -103,10 +103,13 @@ class TokenManager(StreamingClient):
                         # Save tweet for crawler.
                         file_path = crawler.path + f"/{date_str}.jsonl"
 
-                        with open(file_path, "a") as write_file:
-                            json.dump(tweet, write_file)
-                            write_file.write('\n')
-                        crawler.tweets += 1
+                        with crawler.lock:
+                            crawler.tweets_to_save.append({'path': file_path, 'tweet': tweet})
+
+                        # with open(file_path, "a") as write_file:
+                        #     json.dump(tweet, write_file)
+                        #     write_file.write('\n')
+                        # crawler.tweets += 1
                         # tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
             except Exception as error:
                 tmu.tm_log.error(f'Error while processing response -- {status} -- {error}')

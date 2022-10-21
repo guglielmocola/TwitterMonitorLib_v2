@@ -90,6 +90,10 @@ class TwitterMonitor:
         # Assign current instance to the single allowed TM instance
         _tm_instance_active = self
 
+        # Launch thread to dump tweet jsons into files
+        self.tweet_saver_thread = threading.Thread(target=self._tweet_saver)
+        self.tweet_saver_thread.start()
+
         # Finally, launch thread to keep everything checked and updated
         self._check_thread = threading.Thread(target=self._check_status)
         self._check_thread.start()
@@ -102,6 +106,38 @@ class TwitterMonitor:
             tmu.tm_log.error('Error: only one TwitterMonitor object can be defined. Returning the already-existing object.')
             return _tm_instance_active
         return super(TwitterMonitor, cls).__new__(cls, *args, **kwargs)
+
+    def _tweet_saver(self):
+        while True:
+            saved_one = False
+            for c in self._crawlers['active'].values():
+                if len(c.tweets_to_save) > 0:
+                    saved_one = True
+                    tweets_to_save = []
+                    with c.lock:
+                        tweets_to_save = c.tweets_to_save
+                        c.tweets_to_save = []
+                        c.tweets += len(tweets_to_save)
+                    for t in tweets_to_save:
+                        with open(t['path'], "a") as write_file:
+                            json.dump(t['tweet'], write_file)
+                            write_file.write('\n')
+
+            for c in self._crawlers['paused'].values():
+                if len(c.tweets_to_save) > 0:
+                    saved_one = True
+                    tweets_to_save = []
+                    with c.lock:
+                        tweets_to_save = c.tweets_to_save
+                        c.tweets_to_save = []
+                        c.tweets += len(tweets_to_save)
+                    for t in tweets_to_save:
+                        with open(t['path'], "a") as write_file:
+                            json.dump(t['tweet'], write_file)
+                            write_file.write('\n')
+
+            if not saved_one:
+                time.sleep(10)
 
     def _check_status(self):
         # global _tm_config
@@ -135,7 +171,6 @@ class TwitterMonitor:
                         c.save()
                         if write_log:
                             tmu.tm_log.info(f'Active:{c.name} Tweets:{c.tweets}')
-
 
             time.sleep(tmu.tm_config['check_interval'])
 

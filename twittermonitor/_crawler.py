@@ -3,10 +3,15 @@ import json
 import os
 import datetime
 import pytimeparse
+import threading
 
 class Crawler:
     def __init__(self, name, is_follow=False, targets=[]):
         # global _tm_config
+
+        self.lock = threading.Lock()
+        self.tweets_to_save = []
+
         self.name = name
         self.path = tmu.tm_config['data_path'] + f"/{self.name}"
         self.manager = False  # Set externally by the TokenManager with a ref to itself
