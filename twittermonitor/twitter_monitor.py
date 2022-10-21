@@ -104,7 +104,7 @@ class TwitterMonitor:
         """
         global _tm_instance_active
         if _tm_instance_active is not False:
-            tmu.tm_log.error('Error: only one TwitterMonitor object can be defined. Returning the already-existing object.')
+            tmu.tm_log.error('Only one TwitterMonitor object can be defined. Returning the already-existing object.')
             return _tm_instance_active
         return super(TwitterMonitor, cls).__new__(cls, *args, **kwargs)
 
@@ -266,7 +266,7 @@ class TwitterMonitor:
                 break
 
         if rules_used < 0:
-            error_msg = 'Error: unable to find a token with enough free rules. You may want to try using multiple crawlers with a subset of the targets'
+            error_msg = 'Unable to find a token with enough free rules. You may want to try using multiple crawlers with a subset of the targets'
             tmu.tm_log.error(error_msg)
             return False, error_msg
 
@@ -290,7 +290,7 @@ class TwitterMonitor:
         """
         with self._lock:
             # Prepare error msg.
-            error_msg = 'Error: Unable to create track crawler -- '
+            error_msg = 'Unable to create track crawler -- '
 
             # Check crawler name
             status, error = self._check_crawler_name(name)
@@ -322,12 +322,12 @@ class TwitterMonitor:
         """
         with self._lock:
             # Prepare error msg
-            error_msg = 'Error: Unable to create follow crawler -- '
+            error_msg = 'Unable to create follow crawler -- '
 
             # Check crawler name
             status, error = self._check_crawler_name(name)
             if status is False:
-                tmu.tm_log.info(error_msg + error)
+                tmu.tm_log.error(error_msg + error)
                 return False, error_msg + error
 
             # Create crawler
@@ -353,9 +353,9 @@ class TwitterMonitor:
             # First check input is correct
             if name not in self._crawlers['active']:
                 if name not in self._crawlers['paused']:  # and name not in self.crawlers['ended']:
-                    error_msg = f'Error: crawler "{name}" does not exist'
+                    error_msg = f'Crawler "{name}" does not exist'
                 else:
-                    error_msg = f'Error: crawler "{name}" is already paused'
+                    error_msg = f'Crawler "{name}" is already paused'
 
                 tmu.tm_log.error(error_msg)
                 return False, error_msg
@@ -387,9 +387,9 @@ class TwitterMonitor:
             # First check the crawler is actually paused
             if name not in self._crawlers['paused']:
                 if name not in self._crawlers['active']:
-                    error_msg = f'Error: crawler "{name}" does not exist'
+                    error_msg = f'Crawler "{name}" does not exist'
                 else:
-                    error_msg = f'Error: crawler "{name}" is already active'
+                    error_msg = f'Crawler "{name}" is already active'
 
                 tmu.tm_log.error(error_msg)
                 return False, error_msg
@@ -415,9 +415,9 @@ class TwitterMonitor:
             # First check the crawler is actually paused
             if name not in self._crawlers['paused']:
                 if name not in self._crawlers['active']:
-                    error_msg = f'Error: crawler "{name}" does not exist'
+                    error_msg = f'Crawler "{name}" does not exist'
                 else:
-                    error_msg = f'Error: crawler "{name}" is active and cannot be deleted'
+                    error_msg = f'Crawler "{name}" is active and cannot be deleted'
 
                 tmu.tm_log.error(error_msg)
                 return False, error_msg
@@ -426,7 +426,7 @@ class TwitterMonitor:
             crawler = self._crawlers['paused'][name]
 
             # Prepare error msg
-            error_msg = f'Error: Unable to delete crawler "{name}" -- '
+            error_msg = f'Unable to delete crawler "{name}" -- '
             # Create crawler
             try:
                 crawler.delete()
