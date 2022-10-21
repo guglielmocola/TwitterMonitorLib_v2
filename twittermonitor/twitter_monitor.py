@@ -233,11 +233,15 @@ class TwitterMonitor:
         mode_verb = 'tracks' if mode == 'track' else 'follows'
         mode_obj = 'keywords' if mode == 'track' else 'accounts'
         if type(targets) != list:
-            return False, f'Argument {mode_obj} must be a list of strings'
+            return False, f'{mode_obj} must be a list of strings'
 
         targets = set(targets)
 
-        all_crawlers = self._crawlers['active'] | self._crawlers['paused']
+        all_crawlers = self._crawlers['active']
+        for c in self._crawlers['paused']:
+            all_crawlers[c] = self._crawlers['paused'][c]
+
+        # all_crawlers = self._crawlers['active'] | self._crawlers['paused'] XXX merge introduced in python 3.9
         for c in all_crawlers.values():
             if c.mode == mode and targets == set(c.targets):
                 return False, f'Crawler with name "{c.name}" already {mode_verb} the same {mode_obj}'
@@ -282,12 +286,12 @@ class TwitterMonitor:
         if rules_used < 0:
             error_msg = 'Unable to find a token with enough free rules. You may want to try using multiple crawlers with a subset of the targets'
             tmu.tm_log.error(error_msg)
-            return False, error_msg
+            return False
 
         success_msg = f'OK: crawler {crawler.name} activated to {crawler.mode} the specified targets'
 
         tmu.tm_log.info(success_msg)
-        return True, success_msg
+        return True
 
     def track(self, name, keywords):
         """Create and start a new crawler aimed at traking specified keywords
@@ -299,8 +303,7 @@ class TwitterMonitor:
                 one of the keywords are detected and saved
 
         Returns:
-            status, msg (bool, str): status is True if succeded; msg contains the error message
-                in case of error
+            bool: True for success, False otherwise.
         """
         with self._lock:
             # Prepare error msg.
@@ -310,20 +313,20 @@ class TwitterMonitor:
             status, error = self._check_crawler_name(name)
             if status is False:
                 tmu.tm_log.error(error_msg + error)
-                return False, error_msg + error
+                return False
 
             # Check keywords
             status, error = self._check_crawler_targets(keywords, 'track')
             if status is False:
                 tmu.tm_log.error(error_msg + error)
-                return False, error_msg + error
+                return False
 
             # Create crawler
             try:
                 crawler = Crawler(name, False, keywords)
             except Exception as error:
                 tmu.tm_log.error(error_msg + repr(error))
-                return False, error_msg + repr(error)
+                return False
 
             return self._assign_crawler(crawler)
 
@@ -337,8 +340,7 @@ class TwitterMonitor:
                 Tweets from, to, or retweeted from one of the specified accounts are detected and saved
 
         Returns:
-            status, msg (bool, str): status is True if succeded; msg contains the error message
-                in case of error
+            bool: True for success, False otherwise.
         """
         with self._lock:
             # Prepare error msg
@@ -348,20 +350,20 @@ class TwitterMonitor:
             status, error = self._check_crawler_name(name)
             if status is False:
                 tmu.tm_log.error(error_msg + error)
-                return False, error_msg + error
+                return False
 
             # Check accounts
             status, error = self._check_crawler_targets(accounts, 'follow')
             if status is False:
                 tmu.tm_log.error(error_msg + error)
-                return False, error_msg + error
+                return False
 
             # Create crawler
             try:
                 crawler = Crawler(name, True, accounts)
             except Exception as error:
                 tmu.tm_log.error(error_msg + repr(error))
-                return False, error_msg + repr(error)
+                return False
 
             return self._assign_crawler(crawler)
 
@@ -372,8 +374,7 @@ class TwitterMonitor:
             name (str): name of the crawler to be paused
 
         Returns:
-            status, msg (bool, str): status is True if succeded; msg contains the error message
-                in case of error
+            bool: True for success, False otherwise.
         """
         with self._lock:
             # First check input is correct
@@ -384,7 +385,7 @@ class TwitterMonitor:
                     error_msg = f'Crawler "{name}" is already paused'
 
                 tmu.tm_log.error(error_msg)
-                return False, error_msg
+                return False
 
             # OK, crawler is really active. Let's pause it
             crawler = self._crawlers['active'][name]
@@ -397,7 +398,7 @@ class TwitterMonitor:
 
             success_msg = f'Crawler "{name}" successfully paused'
             tmu.tm_log.info(success_msg)
-            return True, success_msg
+            return True
 
     def resume(self, name):
         """Resume a paused crawler
@@ -406,8 +407,7 @@ class TwitterMonitor:
             name (str): name of the crawler to be resume
 
         Returns:
-            status, msg (bool, str): status is True if succeded; msg contains the error message
-                in case of error
+            bool: True for success, False otherwise.
         """
         with self._lock:
             # First check the crawler is actually paused
@@ -418,7 +418,7 @@ class TwitterMonitor:
                     error_msg = f'Crawler "{name}" is already active'
 
                 tmu.tm_log.error(error_msg)
-                return False, error_msg
+                return False
 
             # Try resuming the crawler
             crawler = self._crawlers['paused'][name]
@@ -434,8 +434,7 @@ class TwitterMonitor:
             name (str): name of the crawler to be deleted
 
         Returns:
-            status, msg (bool, str): status is True if succeded; msg contains the error message
-                in case of error
+            bool: True for success, False otherwise.
         """
         with self._lock:
             # First check the crawler is actually paused
@@ -446,7 +445,7 @@ class TwitterMonitor:
                     error_msg = f'Crawler "{name}" is active and cannot be deleted'
 
                 tmu.tm_log.error(error_msg)
-                return False, error_msg
+                return False
 
             # OK, let's delete the paused crawler
             crawler = self._crawlers['paused'][name]
@@ -458,13 +457,13 @@ class TwitterMonitor:
                 crawler.delete()
             except Exception as error:
                 tmu.tm_log.error(error_msg + repr(error))
-                return False, error_msg + repr(error)
+                return False
 
             del self._crawlers['paused'][name]
 
             success_msg = f'Crawler "{name}" successfully deleted from TwitterMonitor'
             tmu.tm_log.info(success_msg)
-            return True, success_msg
+            return True
 
     def info(self):
         """Print a summary of the TwitterMonitor's status"""
