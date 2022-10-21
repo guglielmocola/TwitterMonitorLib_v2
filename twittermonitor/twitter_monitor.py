@@ -29,16 +29,17 @@ class TwitterMonitor:
 
         # Try loading credentials.
         c_file_path = tmu.tm_config['credentials_file']
+        tmu.tm_log.info(f'Loading credentials from file "{c_file_path}"')
         try:
             self._load_credentials(c_file_path)  # fill self.credentials
         except Exception as error:
-            tmu.tm_log.error(f'Error: unable to load credentials from file "{c_file_path}" -- {repr(error)}')
+            tmu.tm_log.error(f'Unable to load credentials -- {repr(error)}')
             raise error
 
         n_credentials = len(self._credentials)
         if n_credentials == 0:
-            tmu.tm_log.error(f'Error: no credentials found in file "{c_file_path}"')
-            raise (Exception(f'Error: no credentials found in file "{c_file_path}"'))
+            tmu.tm_log.error(f'No credentials found in file "{c_file_path}"')
+            raise (Exception(f'No credentials found in file "{c_file_path}"'))
 
         plural = ''
         if n_credentials > 1:
@@ -51,7 +52,7 @@ class TwitterMonitor:
             try:
                 os.mkdir(data_dir)
             except Exception as error:
-                tmu.tm_log.error(f'Error: unable to create dataset path "{data_dir}"')
+                tmu.tm_log.error(f'Unable to create dataset path "{data_dir}"')
                 raise error
         else:
             # dataset folder already exists, check for content and load it
@@ -71,14 +72,14 @@ class TwitterMonitor:
 
         # Create a TokenManager for each credential
         for cn in self._credentials:
-            tmu.tm_log.info(f'Creating TokenManager for credential {cn}...')
+            tmu.tm_log.info(f'Creating TokenManager for credential "{cn}"...')
             try:
                 self._managers[cn] = TokenManager(cn, self._credentials[cn])
             except Exception as error:
-                tmu.tm_log.error(f'Error: unable to create TokenManager for credential "{cn}" -- {repr(error)}')
+                tmu.tm_log.error(f'Unable to create TokenManager for credential "{cn}" -- {repr(error)}')
                 raise error
             else:
-                tmu.tm_log.info(f'Success. Credential {cn} has level: {self._managers[cn].level}')
+                tmu.tm_log.info(f'Done. Credential "{cn}" has level: "{self._managers[cn].level}"')
 
         # Fill managers_by_level list.
         for level in tmu.tm_config['api_limits']:
@@ -176,7 +177,7 @@ class TwitterMonitor:
 
     def _load_credentials(self, c_file_path):
         fields = ['user', 'app_name', 'bearer_token']
-        error_msg = f"Error while loading credentials from file {c_file_path}"
+        # error_msg = f"Error while loading credentials from file {c_file_path}"
         #         try:
         with open(c_file_path, "r") as c_file:
             line = 0
@@ -187,13 +188,19 @@ class TwitterMonitor:
                     continue
 
                 c = json.loads(x)
+                field_error = False
                 for f in fields:
                     if f not in c:
                         #                         print(f"{error_msg} -- Missing field '{f}' in credential on line {line}")
-                        raise Exception(f"{error_msg} -- Missing field '{f}' in credential on line {line}")
+                        tmu.tm_log.warning(f'Skipped credential on line {line} -- missing field "{f}"')
+                        field_error = True
+                        break
+                        # raise Exception(f"{error_msg} -- Missing field '{f}' in credential on line {line}")
+                if field_error:
+                    continue
                 c_name = f"{c['user']}/{c['app_name']}"
                 if c_name in self._credentials:
-                    tmu.tm_log.warning(f'Warning: repeated credential {c_name} on line {line} -- ignored')
+                    tmu.tm_log.warning(f'Ignored repeated credential {c_name} on line {line}')
                     continue
                 self._credentials[c_name] = c['bearer_token']
 
