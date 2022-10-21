@@ -78,6 +78,9 @@ class Crawler:
         self.activity_log = info['activity_log']
 
         # Check activity log is well-defined
+        if type(self.activity_log) != list or len(self.activity_log) <= 0:
+            err_msg = f"Error in the activity log of crawler '{self.name}'"
+            raise (Exception(err_msg))
         for a in self.activity_log:
             if 'start' not in a or 'duration' not in a:
                 err_msg = f"Error in the activity log of crawler '{self.name}'"

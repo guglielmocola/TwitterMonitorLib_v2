@@ -57,7 +57,8 @@ class TwitterMonitor:
         else:
             # dataset folder already exists, check for content and load it
             list_dir = [dI for dI in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, dI))]
-            crawlers = []
+            # print(list_dir)
+            # crawlers = []
             for d in list_dir:
                 try:
                     crawler = Crawler(d)
@@ -228,9 +229,22 @@ class TwitterMonitor:
                 c_info[m.level]['rules_used'] += len(m.rules)
         return c_info
 
-    def _check_crawler_name(self, name):
-        # global _tm_config
+    def _check_crawler_targets(self, targets, mode):
+        mode_verb = 'tracks' if mode == 'track' else 'follows'
+        mode_obj = 'keywords' if mode == 'track' else 'accounts'
+        if type(targets) != list:
+            return False, f'Argument {mode_obj} must be a list of strings'
 
+        targets = set(targets)
+
+        all_crawlers = self._crawlers['active'] | self._crawlers['paused']
+        for c in all_crawlers.values():
+            if c.mode == mode and targets == set(c.targets):
+                return False, f'Crawler with name "{c.name}" already {mode_verb} the same {mode_obj}'
+
+        return True, 'OK'
+
+    def _check_crawler_name(self, name):
         # Check whether the name is already in use.
         if name in self._crawlers['active'] or name in self._crawlers['paused']:
             return False, f'Crawler with name "{name}" already exists'
@@ -298,6 +312,12 @@ class TwitterMonitor:
                 tmu.tm_log.error(error_msg + error)
                 return False, error_msg + error
 
+            # Check keywords
+            status, error = self._check_crawler_targets(keywords, 'track')
+            if status is False:
+                tmu.tm_log.error(error_msg + error)
+                return False, error_msg + error
+
             # Create crawler
             try:
                 crawler = Crawler(name, False, keywords)
@@ -326,6 +346,12 @@ class TwitterMonitor:
 
             # Check crawler name
             status, error = self._check_crawler_name(name)
+            if status is False:
+                tmu.tm_log.error(error_msg + error)
+                return False, error_msg + error
+
+            # Check accounts
+            status, error = self._check_crawler_targets(accounts, 'follow')
             if status is False:
                 tmu.tm_log.error(error_msg + error)
                 return False, error_msg + error
