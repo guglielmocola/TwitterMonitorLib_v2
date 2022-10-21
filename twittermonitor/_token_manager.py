@@ -220,7 +220,7 @@ class TokenManager(StreamingClient):
                 crawler.rules.append(r_id)
             crawler.manager = self
             # save date
-            crawler.activity_log.append({'start': tmu.tm_date_tostr(start_date), 'duration': 0})
+            crawler.activity_log.append({'start': tmu.tm_date_tostr(start_date), 'duration': '0:00:00'})
             crawler.save()
             self.crawlers[crawler.name] = crawler
 
