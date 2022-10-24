@@ -24,7 +24,7 @@ tm_config = {
     'crawler_name_max_l': 25,
     'check_interval': 30,
     'log_interval': 600,
-    'log_file': 'log_tm.txt'
+    'log_file': 'log_TM.txt'
 }
 
 # tm_log global variable Twitter Monitor's logging
