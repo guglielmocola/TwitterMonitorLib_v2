@@ -35,7 +35,7 @@ The library is designed for interactive use in a Python Jupyter Notebook. Here w
 
 * Before being able to use the library, it is required to add valid credentials in file **credentials.jsonl**. Each line in the file should be in the format:
 ```
-{"app_name": "william01","user": "WilliamCol","bearer_token": "..."}
+{"app_name": "paolo01","user": "PaoloMaldiniACM","bearer_token": "..."}
 ```
 
 * Cell #1 -- The library is imported and a TwitterMonitor object is created:
