@@ -26,6 +26,10 @@ Data are saved into the data_TM/ folder. More specifically, there is a dedicated
 
 For more information on the methods and the required parameters, please refer to source code documentation.
 
+Known issues
+------------------------------------------------
+
+Sporadic errors ("connection error" or "operational disconnect") may occur and lead to losing a few seconds/minutes of tweets. This seems to be a Twitter-side issue: the library automatically attempts to reconnect and the stream is restored as soon as a new connection is accepted. In future versions of the library, we plan to introduce means to attempt to recover the tweets lost due to such issues.
 
 Use example
 ------------------------------------------------
