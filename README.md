@@ -26,15 +26,88 @@ Data are saved into the data_TM/ folder. More specifically, there is a dedicated
 
 For more information on the methods and the required parameters, please refer to source code documentation.
 
+Use example
+------------------------------------------------
+
+The library is designed for interactive use in a Python Jupyter Notebook. Here we provide an example. 
+
+* Before being able to use the library, it is required to add valid credentials in file **credentials.jsonl**. Each line in the file should be in the format:
+```
+{"app_name": "william01","user": "WilliamCol","bearer_token": "..."}
+```
+
+* Cell #1 -- The library is imported and a TwitterMonitor object is created:
+```
+from twittermonitor import TwitterMonitor
+
+tm = TwitterMonitor()
+```
+
+Output example:
+```
+INFO     Loading credentials from file "credentials.jsonl"
+WARNING  Skipped credential on line 2 -- missing field "app_name"
+INFO     1 credential loaded from file "credentials.jsonl"
+INFO     Creating TokenManager for credential "WilliamCole/william01"...
+INFO     Done. Credential "WilliamCole/william01" has level: "elevated"
+```
+
+* Cell #2 -- A follow crawler named "IT_politicians" is started:
+```
+tm.follow('IT_politicians', ['matteosalvinimi','berlusconi', 'GiorgiaMeloni', 'CarloCalenda', '18762875'])
+```
+
+Output example:
+```
+INFO     OK: crawler "IT_politicians" activated to follow the specified targets
+```
+
+* Cell #3 -- A track crawler named "track1" is started:
+```
+tm.track('track1', ['Covid19', 'coronavirus', 'lockdown'])
+```
+
+Output example:
+```
+#INFO     OK: crawler "track1" activated to track the specified targets
+```
+
+* Cell #4 -- Show a summary of ongoing operations
+```
+tm.info()
+```
+
+Output example:
+```
+*** ACTIVE CRAWLERS ***
+Name                       Type    Targets  Started (UTC)   Tot active  Tweets
+IT_politicians             follow  5        22-10-21 17:37  3d 14h      77782
+track1                     track   3        22-10-21 19:37  3d 12h      2343
+
+
+*** CRDENTIALS ***
+Type      Tokens    Rules used/total
+elevated  1         2/25
+```
+
+* Cell #5 -- Pause crawler "track1"
+```
+tm.pause('track1')
+```
+
+Output example:
+```
+INFO     Crawler "track1" successfully paused
+```
+
+In addition to the information printed on the standard output, the library produces a **log_TM.txt** log file that also includes regular updates (every ten minutes) on active crawlers and error messages.
+
 Known issues
 ------------------------------------------------
 
 Sporadic errors ("connection error" or "operational disconnect") may occur and lead to losing a few seconds/minutes of tweets. This seems to be a Twitter-side issue: the library automatically attempts to reconnect and the stream is restored as soon as a new connection is accepted. In future versions of the library, we plan to introduce means to attempt to recover the tweets lost due to such issues.
 
-Use example
-------------------------------------------------
-
-File *use_example.py* provides examples on how the methods described above can be imported and used.
+The library ensures that the number of rules defined is limited according to the number and type of credentials. However, it will not check for the monthly tweet cap associated to the credentials. The user must take care of this limitation.
 
 
 References
