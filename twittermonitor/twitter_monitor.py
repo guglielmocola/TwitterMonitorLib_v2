@@ -84,8 +84,6 @@ class TwitterMonitor:
             else:
                 tmu.tm_log.info(f'Done. Credential "{cn}" has level: "{self._managers[cn].level}"')
 
-
-
         # Check at least one credential was valid
         if len(invalid_credentials) == len(self._credentials):
             tmu.tm_log.error(f'No valid credential found in file "{c_file_path}"')
@@ -177,19 +175,22 @@ class TwitterMonitor:
                         write_log = True
                         last_log_time = current_time
 
+                    log_str = []
+
                     for c in m_crawlers:
-                        # Check end conditions
                         current_date = tmu.tm_date()
-                        if isinstance(c.end_date, datetime.datetime) and c.end_date < current_date:
-                            # XXX TODO for NEXT version
-                            tmu.tm_log.warning(f"Crawler time has expired")
+                        # Check end conditions XXX TODO for NEXT version
+                        # if isinstance(c.end_date, datetime.datetime) and c.end_date < current_date:
+                        #     tmu.tm_log.warning(f"Crawler time has expired")
 
                         # Update duration and save crawler
                         start_date = tmu.tm_date_fromstr(c.activity_log[-1]['start'])
                         c.activity_log[-1]['duration'] = str(current_date - start_date).split('.')[0]
                         c.save()
-                        if write_log:
-                            tmu.tm_log.info(f'Active:{c.name} Tweets:{c.tweets}')
+                        log_str.append(f'{c.name}({c.tweets})')
+
+                    if write_log:
+                        tmu.tm_log.info(f'Active:{";".join(log_str)}')
 
             time.sleep(tmu.tm_config['check_interval'])
 
@@ -310,7 +311,7 @@ class TwitterMonitor:
             tmu.tm_log.error(error_msg)
             return False
 
-        success_msg = f'OK: crawler {crawler.name} activated to {crawler.mode} the specified targets'
+        success_msg = f'Crawler "{crawler.name}" activated to {crawler.mode} the specified targets'
 
         tmu.tm_log.info(success_msg)
         return True

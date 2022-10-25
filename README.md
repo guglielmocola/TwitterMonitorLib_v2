@@ -62,7 +62,7 @@ tm.follow('IT_politicians', ['matteosalvinimi','berlusconi', 'GiorgiaMeloni', 'C
 
 Output example:
 ```
-INFO     OK: crawler "IT_politicians" activated to follow the specified targets
+INFO     Crawler "IT_politicians" activated to follow the specified targets
 ```
 
 * Cell #3 -- A track crawler named "track1" is started:
@@ -72,7 +72,7 @@ tm.track('track1', ['Covid19', 'coronavirus', 'lockdown'])
 
 Output example:
 ```
-#INFO     OK: crawler "track1" activated to track the specified targets
+#INFO     Crawler "track1" activated to track the specified targets
 ```
 
 * Cell #4 -- Show a summary of ongoing operations
