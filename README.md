@@ -50,8 +50,9 @@ Output example:
 INFO     Loading credentials from file "credentials.jsonl"
 WARNING  Skipped credential on line 2 -- missing field "app_name"
 INFO     1 credential loaded from file "credentials.jsonl"
-INFO     Creating TokenManager for credential "WilliamCole/william01"...
-INFO     Done. Credential "WilliamCole/william01" has level: "elevated"
+INFO     Creating TokenManager for credential "PaoloMaldini/paolo01"...
+INFO     Done. Credential "PaoloMaldini/paolo01" has level: "elevated"
+INFO     1 valid credential found
 ```
 
 * Cell #2 -- A follow crawler named "IT_politicians" is started:

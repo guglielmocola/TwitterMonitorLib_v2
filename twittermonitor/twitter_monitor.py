@@ -72,15 +72,32 @@ class TwitterMonitor:
                         tmu.tm_log.info(f'Existing Crawler {d} loaded successfully (paused)')
 
         # Create a TokenManager for each credential
+        invalid_credentials = []
         for cn in self._credentials:
             tmu.tm_log.info(f'Creating TokenManager for credential "{cn}"...')
             try:
                 self._managers[cn] = TokenManager(cn, self._credentials[cn])
             except Exception as error:
                 tmu.tm_log.error(f'Unable to create TokenManager for credential "{cn}" -- {repr(error)}')
-                raise error
+                invalid_credentials.append(cn)
+                continue
             else:
                 tmu.tm_log.info(f'Done. Credential "{cn}" has level: "{self._managers[cn].level}"')
+
+
+
+        # Check at least one credential was valid
+        if len(invalid_credentials) == len(self._credentials):
+            tmu.tm_log.error(f'No valid credential found in file "{c_file_path}"')
+            raise (Exception(f'No valid credential found in file "{c_file_path}"'))
+        # Remove invalid credentials from self._credentials
+
+        for invalid in invalid_credentials:
+            del self._credentials[invalid]
+
+        n_credentials = len(self._credentials)
+        plural = 's' if n_credentials > 1 else ''
+        tmu.tm_log.info(f'{len(self._credentials)} valid credential{plural} found')
 
         # Fill managers_by_level list.
         for level in tmu.tm_config['api_limits']:
@@ -188,7 +205,12 @@ class TwitterMonitor:
                 if x == "":
                     continue
 
-                c = json.loads(x)
+                try:
+                    c = json.loads(x)
+                except Exception as error:
+                    tmu.tm_log.warning(f'Skipped line {line}, not a valid json')
+                    continue
+
                 field_error = False
                 for f in fields:
                     if f not in c:
