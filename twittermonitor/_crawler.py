@@ -6,9 +6,10 @@ import pytimeparse
 import threading
 
 class Crawler:
+    """Class to manage the information associated to a crawler (track or follow).
+    """
+    
     def __init__(self, name, is_follow=False, targets=[]):
-        # global _tm_config
-
         self.lock = threading.Lock()
         self.tweets_to_save = []
 
@@ -18,15 +19,17 @@ class Crawler:
         self.rules = []  # Set externally by the TokenManager with the ids of the crawler's rules
         self.deleted = False
 
-        # Thresholds, should be optional
-        self.end_date = False
-        #         self.end_tweet = 0  XXX in a future version
+        # Date-based threshold
+        # self.end_date = False  # for a future version, not enabled yet
+
+        # Tweet language filter
+        # self.languages = [] # for a future version, not enabled yet
 
         # Tweet count.
         self.tweets = 0
 
         # Activity log
-        self.activity_log = []  # array of {start: (str) date, end: (str) date} objects
+        self.activity_log = []  # array of {'start': (str) date, 'duration': (str) timedelta} objects
 
         # Try loading the crawler from filesystem.
         if os.path.isdir(self.path):
@@ -43,8 +46,6 @@ class Crawler:
         else:
             self.mode = 'track'
 
-        #         self.languages = [] # XXX TODO XXX
-
         # Prepare path.
         os.mkdir(self.path)
 
@@ -54,7 +55,6 @@ class Crawler:
     def load(self):
         """Load crawler info from info.json file.
         """
-        #         print('DEBUG: start cr. load')
         with open(self.path + "/info.json", "r") as read_file:
             info = json.load(read_file)
 
@@ -92,7 +92,6 @@ class Crawler:
     def save(self):
         """Save crawler info into info.json file.
         """
-
         info = {
             'name': self.name,
             'mode': self.mode,
@@ -107,6 +106,7 @@ class Crawler:
 
     def delete(self):
         """Set crawler as deleted and update info.json file.
+        Crawler will not be loaded again.
         """
         self.deleted = True
         self.save()
@@ -114,9 +114,8 @@ class Crawler:
     def session_durations(self):
         """ How long this crawler have(or had) been running
 
-        Return:
-            list int: List of durations (in seconds) for each activity recorded
-                in self.activity_log
+        Returns:
+            list int: List of durations (in seconds) for each activity recorded in self.activity_log
         """
         durations = []
         for activity in self.activity_log:
@@ -125,8 +124,8 @@ class Crawler:
         return durations
 
     def __str__(self):
-        # global _tm_config
-
+        """Str representation of the Crawler
+        """
         durations = self.session_durations()
 
         if len(self.rules) > 0:
@@ -145,11 +144,8 @@ class Crawler:
         # Remove initial '20' and seconds from last_date
         last_date = last_date[2:(last_date.rfind(':'))]
 
-        #         mode_n_targets = f'{self.mode} ({len(self.targets)})'
         n_targets = len(self.targets)
-        #         mode_n_targets = f'{self.mode}'
         name_spaces = tmu.tm_config['crawler_name_max_l'] + 2
-        #         targets_csv = tmu.tm_quoted_list(self.targets)
 
         return (
             f'{self.name:<{name_spaces}}'
@@ -158,5 +154,4 @@ class Crawler:
             f'{last_date:<16}'
             f'{elapsed_str:<12}'
             f'{self.tweets}'
-            #              f'{targets_csv}'
         )
