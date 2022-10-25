@@ -10,21 +10,23 @@ These methods are equivalent to the "track" and "follow" endpoints offered by Tw
 
 Hereafter, we also use the term "crawler" to refer to a "track" or "follow" listening campaign
 
-The class TwitterMonitor provides the following methods:
-* The constructor loads credentials from file "credentials.jsonl" and automatically determines each credential's level (i.e., essential, elevated, academic).
-* track(str: name, list: keywords)  starts a "track" crawler on the specified keywords
-* follow(str: name, list: accounts) stars a "follow" crawler on the specified accounts
-* pause(str: name) the specified crawler is temporarily paused
-* resume(str: name) the specified crawler is resumed
-* delete(str: name) the crawler is removed from TwitterMonitor and will not be loaded again when a TwitterMonitor object is created
-* info() prints basic info on active and paused crawlers to the standard output
-* info_crawler(str: name) prints more detail on the specified crawler to the standard output.
+The class **TwitterMonitor** provides the following public methods:
+* The **constructor** loads credentials from file "credentials.jsonl" and automatically determines each credential's level (i.e., essential, elevated, academic).
+* **track**(str: name, list: keywords)  starts a "track" crawler on the specified keywords
+* **follow**(str: name, list: accounts) stars a "follow" crawler on the specified accounts
+* **pause**(str: name) the specified crawler is temporarily paused
+* **resume**(str: name) the specified crawler is resumed
+* **delete**(str: name) the crawler is removed from TwitterMonitor and will not be loaded again when a TwitterMonitor object is created
+* **info**() prints basic info on active and paused crawlers to the standard output
+* **info_crawler**(str: name) prints more detail on the specified crawler to the standard output.
 
-Data are saved into the data_TM/ folder. More specifically, there is a dedicated subfolder for each crawler, named as the crawler itself. Each crawler's folder includes:
-* One .jsonl file per day with the tweet objects collected on that day
-* File info.json with the crawler's info (must not be edited manually); this configuration is used to reload the crawler automatically in case the application is restarted and a new TwitterMonitor object is created (loaded crawlers are set to the "paused" state by default).
+In addition to the information printed on the standard output, the library produces a **log_TM.txt** log file that also includes regular updates (every ten minutes) on active crawlers and error messages.
 
-For more information on the methods and the required parameters, please refer to source code documentation.
+Data are saved into the **data_TM/ folder**. More specifically, there is a dedicated subfolder for each crawler, named as the crawler itself. Each crawler's folder includes:
+* One **YY-MM-DD.jsonl** file per day with the tweet objects collected on that day
+* File **info.json** with the crawler's info (must not be edited manually); this configuration is used to reload the crawler automatically in case the application is restarted and a new TwitterMonitor object is created (loaded crawlers are set to the "paused" state by default).
+
+
 
 Use example
 ------------------------------------------------
@@ -99,8 +101,6 @@ Output example:
 ```
 INFO     Crawler "track1" successfully paused
 ```
-
-In addition to the information printed on the standard output, the library produces a **log_TM.txt** log file that also includes regular updates (every ten minutes) on active crawlers and error messages.
 
 Known issues
 ------------------------------------------------
