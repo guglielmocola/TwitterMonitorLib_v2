@@ -11,7 +11,7 @@ These methods are equivalent to the "track" and "follow" endpoints offered by Tw
 Hereafter, we also use the term "crawler" to refer to a "track" or "follow" listening campaign
 
 The class **TwitterMonitor** provides the following public methods:
-* The **constructor** loads credentials from file "credentials.jsonl" and automatically determines each credential's level (i.e., essential, elevated, academic).
+* The **constructor** loads credentials from file "credentials.jsonl" and automatically determines each credential's level (i.e., essential, elevated, academic)
 * **track**(str: name, list: keywords)  starts a "track" crawler on the specified keywords
 * **follow**(str: name, list: accounts) stars a "follow" crawler on the specified accounts
 * **pause**(str: name) the specified crawler is temporarily paused
