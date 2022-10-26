@@ -57,7 +57,7 @@ INFO     1 valid credential found
 
 * Cell #2 -- A follow crawler named "IT_politicians" is started:
 ```
-tm.follow('IT_politicians', ['matteosalvinimi','berlusconi', 'GiorgiaMeloni', 'CarloCalenda', '18762875'])
+tm.follow('IT_politicians', ['matteosalvinimi', 'GiorgiaMeloni', 'EnricoLetta', 'CarloCalenda', '18762875'])
 ```
 
 Output example:
