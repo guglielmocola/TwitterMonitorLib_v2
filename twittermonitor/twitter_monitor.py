@@ -1,15 +1,13 @@
 import twittermonitor._utils as tmu
 from twittermonitor._crawler import Crawler
 from twittermonitor._token_manager import TokenManager
-
 import json
 import os
-import datetime
 import threading
 import time
 
 _tm_instance_active = False
-# test
+
 class TwitterMonitor:
     """A class to ease real-time track/follow of tweets using the Twitter API v2
 

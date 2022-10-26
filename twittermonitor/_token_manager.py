@@ -1,5 +1,4 @@
 import tweepy
-import json
 import datetime
 from tweepy import StreamingClient
 import threading
@@ -15,7 +14,6 @@ class TokenManager(StreamingClient):
 
     def __init__(self, name, bearer_token, **kwargs):
         super().__init__(bearer_token, return_type=dict, wait_on_rate_limit=True)
-        # global _tm_config
 
         self.lock = threading.Lock()
 
@@ -26,8 +24,6 @@ class TokenManager(StreamingClient):
         self._delete_all_rules()
         self.disconnect()
         self.level = self._check_credential()
-
-        # self.sessions = []
 
         self.rules = {}  # rule_id: crawler_name
 
@@ -62,7 +58,6 @@ class TokenManager(StreamingClient):
         Returns:
             str: 'academic', 'elevated', or 'essential'
         """
-
         # Prepare dummy rules.
         string_element = 'bb'
         rules = []
@@ -131,7 +126,6 @@ class TokenManager(StreamingClient):
 
     def on_connect(self):
         tmu.tm_log.info(f'{self.name} connected')
-        # self.sessions.append(self.session)
 
     def on_disconnect(self):
         tmu.tm_log.info(f'{self.name} disconnected')

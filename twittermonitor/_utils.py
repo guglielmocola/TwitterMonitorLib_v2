@@ -1,17 +1,10 @@
-import tweepy
-import json
-import sys
-import os
-import datetime # import pandas as pd
-from tweepy import StreamingClient
-import traceback
+import datetime
 import math
-import threading
-import time
 import pytimeparse
-import logging
 import logging.handlers
 import sys
+
+# Globals and utility functions
 
 # Global variable describing the limits of different types of credentials.
 tm_config = {
@@ -52,25 +45,20 @@ def tm_date():
 def tm_date_str():
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
-
 def tm_date_tostr(date_dt):
     return date_dt.strftime("%Y-%m-%d %H:%M:%S %Z")
-
 
 def tm_date_fromstr(date_str):
     date_dt = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S %Z")
     return date_dt.replace(tzinfo=datetime.timezone.utc)
 
-
 def tm_timedelta_fromstr(delta_str):
     return datetime.timedelta(pytimeparse.parse(delta_str))
-
 
 def tm_quoted_list(values):
     """Converts a list into quoted comma separated values.
         Example: (list) [elem1,elem2,elem3] => (str) 'elem1','elem2','elem3' """
     return ','.join(f"'{x}'" for x in values)
-
 
 def tm_duration_str(tot_seconds):
     days = math.floor(tot_seconds / (3600 * 24))
