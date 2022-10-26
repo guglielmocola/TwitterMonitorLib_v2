@@ -11,7 +11,32 @@ import time
 _tm_instance_active = False
 # test
 class TwitterMonitor:
+    """A class to ease real-time track/follow of tweets using the Twitter API v2
+
+    Designed for interactive use in a Python Jupyter Notebook.
+
+    Provides the following main functionalities:
+     * Manage one or more credentials, which are automatically loaded by the constructor from file credentials.jsonl
+     * Start/pause track/follow real-time tweet collection campaigns ("crawlers")
+     * Show information on ongoing and paused crawlers
+     * Save collected tweets into daily .jsonl files
+     * Crawlers' information is automatically reloaded from disk if the application is restarted
+    """
+
     def __init__(self):
+        """Initialize TwitterMonitor object
+
+        Only one object can be instantiated, to avoid conflicts on the same credentials.
+
+        Performs the following operations:
+         * credentials are automatically loaded from credentials.jsonl and an exception is raised if no valid
+            credentials are found;
+         * The path for the dataset is created; if already existing, it attempts to load information on existing
+            crawlers, which are set into the "paused" state
+         * Finally, two threads are launched: one to dump collected tweets from ongoing crawlers into the dataset;
+            another to check ongoing operations, update crawlers' information files, and report the overall status
+            in the log file.
+        """
         global _tm_instance_active
 
         self._lock = threading.Lock()
@@ -116,7 +141,9 @@ class TwitterMonitor:
         self._check_thread.start()
 
     def __new__(cls, *args, **kwargs):
-        """Ensure TwitterMonitor is a singleton, i.e. only one object can be defined.
+        """Ensure TwitterMonitor is a singleton
+
+        Only one object can be defined (instantiated) to avoid conflicts on the use of the same credentials.
         """
         global _tm_instance_active
         if _tm_instance_active is not False:
@@ -125,6 +152,8 @@ class TwitterMonitor:
         return super(TwitterMonitor, cls).__new__(cls, *args, **kwargs)
 
     def _tweet_saver(self):
+        """Thread to dump collected tweets into the dataset
+        """
         while True:
             saved_one = False
             for c in self._crawlers['active'].values():
@@ -157,8 +186,10 @@ class TwitterMonitor:
                 time.sleep(10)
 
     def _check_status(self):
-        # global _tm_config
+        """Thread to check ongoing operations
 
+        Updates crawlers' information in the dataset; reports overall status into the log file.
+        """
         last_log_time = time.time()
 
         # Endless loop, check every 'check_interval' seconds.
@@ -195,9 +226,9 @@ class TwitterMonitor:
             time.sleep(tmu.tm_config['check_interval'])
 
     def _load_credentials(self, c_file_path):
+        """Load credentials from file credentials.jsonl
+        """
         fields = ['user', 'app_name', 'bearer_token']
-        # error_msg = f"Error while loading credentials from file {c_file_path}"
-        #         try:
         with open(c_file_path, "r") as c_file:
             line = 0
             for x in c_file:
@@ -209,13 +240,12 @@ class TwitterMonitor:
                 try:
                     c = json.loads(x)
                 except Exception as error:
-                    tmu.tm_log.warning(f'Skipped line {line}, not a valid json')
+                    tmu.tm_log.warning(f'Skipped line {line}, not a valid json -- {error}')
                     continue
 
                 field_error = False
                 for f in fields:
                     if f not in c:
-                        #                         print(f"{error_msg} -- Missing field '{f}' in credential on line {line}")
                         tmu.tm_log.warning(f'Skipped credential on line {line} -- missing field "{f}"')
                         field_error = True
                         break
@@ -227,12 +257,6 @@ class TwitterMonitor:
                     tmu.tm_log.warning(f'Ignored repeated credential {c_name} on line {line}')
                     continue
                 self._credentials[c_name] = c['bearer_token']
-
-    #         except Exception as error:
-    #             return False, f"{error_msg} -- {error}"
-    #         if len(self.credentials) == 0:
-    #             return False, f"{error_msg} -- No credentials found."
-    #         return True, 'OK'
 
     def _credentials_info(self):
         """Info on credentials
@@ -253,6 +277,8 @@ class TwitterMonitor:
         return c_info
 
     def _check_crawler_targets(self, targets, mode):
+        """Check crawler's targets are defined properly
+        """
         mode_verb = 'tracks' if mode == 'track' else 'follows'
         mode_obj = 'keywords' if mode == 'track' else 'accounts'
         if type(targets) != list:
@@ -272,6 +298,8 @@ class TwitterMonitor:
         return True, 'OK'
 
     def _check_crawler_name(self, name):
+        """Check crawler's name is defined properly
+        """
         # Check whether the name is already in use.
         if name in self._crawlers['active'] or name in self._crawlers['paused']:
             return False, f'Crawler with name "{name}" already exists'
@@ -292,8 +320,8 @@ class TwitterMonitor:
         return True, 'OK'
 
     def _assign_crawler(self, crawler):
-        # Prepare error msg.
-        # Add crawler to TokenManager.
+        """Assign the crawler to a TokenManager
+        """
         # Try all token managers starting from the lowest credential level.
         rules_used = -1
         for m in self._managers_by_level:
@@ -307,7 +335,8 @@ class TwitterMonitor:
                 break
 
         if rules_used < 0:
-            error_msg = 'Unable to find a token with enough free rules. You may want to try using multiple crawlers with a subset of the targets'
+            error_msg = 'Unable to find a token with enough free rules. You may want to try using multiple ' \
+                        'crawlers with a subset of the targets'
             tmu.tm_log.error(error_msg)
             return False
 
@@ -317,7 +346,7 @@ class TwitterMonitor:
         return True
 
     def track(self, name, keywords):
-        """Create and start a new crawler aimed at traking specified keywords
+        """Create and start a new crawler aimed at tracking specified keywords
 
         Args:
             name (str): the new crawler's name. Must be unique and also a valid folder name, as
@@ -489,7 +518,10 @@ class TwitterMonitor:
             return True
 
     def info(self):
-        """Print a summary of the TwitterMonitor's status"""
+        """Print a summary of ongoing operations
+
+        Shows the main information on active crawlers, paused crawlers, and credentials (available rules)
+        """
         with self._lock:
             # global _tm_config
             name_spaces = tmu.tm_config['crawler_name_max_l'] + 2
@@ -550,6 +582,11 @@ class TwitterMonitor:
                     )
 
     def info_crawler(self, name):
+        """Print detailed information on a specific crawler
+
+        Args:
+            name (str): name of the crawler
+        """
         # Find crawler
         if name not in self._crawlers['paused'] and name not in self._crawlers['active']:
             print(f'Error: crawler named "{name} not found')
@@ -581,4 +618,3 @@ class TwitterMonitor:
                 f' -- duration {a["duration"]}'
             )
             a_count += 1
-

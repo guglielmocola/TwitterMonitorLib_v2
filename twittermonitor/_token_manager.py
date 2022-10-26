@@ -6,6 +6,13 @@ import threading
 import twittermonitor._utils as tmu
 
 class TokenManager(StreamingClient):
+    """Class to manage a Twitter API v2 bearer token
+
+    TokenManager is initialized with a bearer token and provides the following main functionalities:
+     * credential check, including credential level recognition
+     * adding/removing Crawler objects, which leads to adding/removing rules to the bearer token
+    """
+
     def __init__(self, name, bearer_token, **kwargs):
         super().__init__(bearer_token, return_type=dict, wait_on_rate_limit=True)
         # global _tm_config
@@ -50,7 +57,11 @@ class TokenManager(StreamingClient):
         ]
 
     def _check_credential(self):
-        """Check credentials level (essential, elevated, academic) based on a simple test"""
+        """Check credentials level (essential, elevated, academic) based on a simple dry-run test
+
+        Returns:
+            str: 'academic', 'elevated', or 'essential'
+        """
 
         # Prepare dummy rules.
         string_element = 'bb'
@@ -64,7 +75,7 @@ class TokenManager(StreamingClient):
         for a in attempts:
             try:
                 self.add_rules(rules[:a], dry_run=True)
-            except BaseException as err:
+            except Exception as error:
                 continue
             else:
                 if a == 26:
@@ -89,6 +100,12 @@ class TokenManager(StreamingClient):
             self.delete_rules(rids)
 
     def on_response(self, status):
+        """Manage a received response
+
+        The expected response is a tweet: according to the matching rules, the tweet is
+        added to the relevant crawlers (through the crawler's attribute tweets_to_save).
+        If the response is not a tweet, an error log message is produced.
+        """
         with self.lock:
             try:
                 tweet = status.data.data
@@ -106,11 +123,6 @@ class TokenManager(StreamingClient):
                         with crawler.lock:
                             crawler.tweets_to_save.append({'path': file_path, 'tweet': tweet})
 
-                        # with open(file_path, "a") as write_file:
-                        #     json.dump(tweet, write_file)
-                        #     write_file.write('\n')
-                        # crawler.tweets += 1
-                        # tmu.tm_log.info(f"Tweet collected for cralwer '{crawler_name}'")
             except Exception as error:
                 tmu.tm_log.error(f'Error while processing response -- {status} -- {error}')
 
@@ -133,11 +145,6 @@ class TokenManager(StreamingClient):
     def on_connection_error(self):
         tmu.tm_log.error(f'{self.name} connection error')
 
-    #         self.disconnect()
-
-    # def on_keep_alive(self):
-    #     print(f'{self.name} keep alive')
-
     def on_request_error(self, status_code):
         tmu.tm_log.error(f'{self.name} request error -- {status_code}')
 
@@ -145,14 +152,16 @@ class TokenManager(StreamingClient):
         tmu.tm_log.error(f'{self.name} unhandled exception -- {repr(exception)}')
 
     def add_crawler(self, crawler):
-        """Add a new crawler to the TokenManager
+        """Attempts to add a new crawler to the TokenManager
+
+        The new crawler is added only if enough "free rules" are available for the bearer token.
 
         Args:
-            crawler (_Crawler): The crawler to be added with all the related info.
+            crawler (_Crawler): The crawler to be added with all the related info
 
         Returns:
             int: Number of rules used for the crawler. Return -1 if add_crawler failed because there are
-                not enough free rules available to serve the crawler.
+                not enough free rules available to serve the crawler
         """
         with self.lock:
             rule = ''
@@ -232,8 +241,10 @@ class TokenManager(StreamingClient):
     def remove_crawler(self, crawler):
         """Remove a crawler from the TokenManager
 
+        Rules related to the crawler are removed from the bearer token.
+
         Args:
-            crawler (Crawler): The crawler to be removed.
+            crawler (Crawler): The crawler to be removed
         """
         with self.lock:
             # Remove rules in crawler.rules from stream, self.rules

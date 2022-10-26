@@ -112,7 +112,7 @@ class Crawler:
         self.save()
 
     def session_durations(self):
-        """ How long this crawler have(or had) been running
+        """ How long this crawler have (or had) been running
 
         Returns:
             list int: List of durations (in seconds) for each activity recorded in self.activity_log
